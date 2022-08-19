@@ -15,6 +15,9 @@
 #include <pthread.h>
 #include <string.h>
 #include <curses.h>
+#include "process.h"
+#include "queues.h"
+#include "debugger.h"
 
 #define PROCESS_NUM 10
 #define FALSE 0
@@ -23,68 +26,6 @@
 #define IO_OP 1
 
 int latest_printed_lines_num = 0;
-
-typedef struct Process {
-    int pid;
-    int cpu_burst_time;
-    int io_burst_time;
-    long arrival_time;
-    int priority;
-    int io_curr_burst_time;
-    int cpu_curr_burst_time;
-    int next_op; //0 for CPU and 1 for I/O
-    int waiting_time;
-    int turnaround_time;
-    int time_quantum;
-} process;
-
-typedef struct Node {
-    process *process;
-    struct Node *next;
-} node;
-
-typedef struct Queue {
-    int size;
-    node *head;
-    node *tail;
-} queue;
-
-void init(queue *q) {
-    q->size = 0;
-    q->head = NULL;
-    q->head = NULL;
-}
-
-int is_empty(queue *q) {
-    return (q->head == NULL);
-}
-
-void enqueue(queue *q, process *p) {
-    node *new_node;
-    new_node = (node *) malloc(sizeof(node));
-    new_node->process = p;
-    new_node->next = NULL;
-    if (is_empty(q)) {
-        q->head = new_node;
-        q->tail = new_node;
-        return;
-    }
-    q->tail->next = new_node;
-    q->tail = new_node;
-    q->size++;
-    return;
-}
-
-process *dequeue(queue *q) {
-    node *tmp = q->head;
-    process *p = tmp->process;
-    q->head = tmp->next;
-    q->size--;
-    free(tmp);
-    return p;
-}
-
-//############
 
 void reset_x_lines(int x) {
     printw("\33[2K");
@@ -116,20 +57,11 @@ void swap(int *a, int *b) {
     *b = temp;
 }
 
-// A function to generate a random permutation of arr[]
 void randomize(int arr[], int n) {
     int i;
-    // Use a different seed value so that we don't get same
-    // result each time we run this program
     srand((int)time(NULL));
-
-    // Start from the last element and swap one by one. We don't
-    // need to run for the first element that's why i > 0
     for (i = n - 1; i > 0; i--) {
-        // Pick a random index from 0 to i
         int j = rand() % (i + 1);
-
-        // Swap arr[i] with the element at random index
         swap(&arr[i], &arr[j]);
     }
 }
@@ -152,13 +84,11 @@ void process_creation(queue *queue, process process_array[PROCESS_NUM]) {
         struct tm _tm = *localtime(&arrival_time);
 
         int priority = rand() % PROCESS_NUM;
-//        time_t arrival_time = time;
         int cpu_burst_time = rand() % 20 + 1;
         int io_burst_time = rand() % 30;
 
         process_array[i] = create_process(pid_array[i], priority, _tm.tm_gmtoff, cpu_burst_time, io_burst_time);
         enqueue(queue, &process_array[i]);
-//        sleep(2);
     }
 }
 
@@ -190,15 +120,6 @@ void printQueue(queue *queue) {
     printw("===================================================================\n");
 }
 
-void *handle_io_operations(queue *io_q, queue *c_q, void *par) {
-    while (!is_empty(c_q) && !is_empty(io_q)) {
-        process *p = dequeue(io_q);
-        sleep(p->io_burst_time);
-        p->next_op = 0;
-        enqueue(c_q, p);
-    }
-    pthread_exit(par);
-}
 
 void print_status(queue *io_q, queue *c_q, process *c_p, process *io_p) {
     clear();
@@ -267,11 +188,11 @@ void fcfs(void) {
 }
 
 int main() {
+    if (!ensure_debugger_attached_woraround(700))
+        return 1;
+    
     initscr();
-//    raw();
-//    printw("Hello world!");
     fcfs();
-//    getch();
     endwin();
     return 0;
 }
