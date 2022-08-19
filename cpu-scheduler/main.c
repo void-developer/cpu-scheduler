@@ -121,7 +121,7 @@ void randomize(int arr[], int n) {
     int i;
     // Use a different seed value so that we don't get same
     // result each time we run this program
-    srand(time(NULL));
+    srand((int)time(NULL));
 
     // Start from the last element and swap one by one. We don't
     // need to run for the first element that's why i > 0
@@ -145,7 +145,7 @@ void process_creation(queue *queue, process process_array[PROCESS_NUM]) {
 
     randomize(pid_array, PROCESS_NUM);
 
-    srand(time(NULL));
+    srand((int)time(NULL));
 
     for (i = 0; i < PROCESS_NUM; i++) {
         time_t arrival_time = time(NULL);
@@ -225,7 +225,7 @@ void print_status(queue *io_q, queue *c_q, process *c_p, process *io_p) {
 }
 
 
-void fcfs() {
+void fcfs(void) {
     process cpu_array[PROCESS_NUM];
     queue *c_q = (queue *) malloc(sizeof(queue));
     queue *io_q = (queue *) malloc(sizeof(queue));
