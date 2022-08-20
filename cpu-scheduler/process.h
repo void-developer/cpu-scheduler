@@ -22,4 +22,5 @@ typedef struct Process {
     int turnaround_time;
     int time_quantum;
 } process;
+process null_process(void);
 #endif /* process_h */

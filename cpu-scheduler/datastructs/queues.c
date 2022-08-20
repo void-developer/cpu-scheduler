@@ -6,7 +6,7 @@
 //
 
 #include "queues.h"
-#include "process.h"
+#include "../process.h"
 #include <stdio.h>
 #include <stdlib.h>
 
