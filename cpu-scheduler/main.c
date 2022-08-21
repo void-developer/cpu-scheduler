@@ -21,6 +21,11 @@
 #include "heaps.h"
 #include "mainhelper.h"
 
+#define FCFS 0
+#define SJF 1
+#define RR 2
+#define VRR 3
+
 int latest_printed_lines_num = 0;
 
 #define CREDIT_QUEUE 1
@@ -238,13 +243,30 @@ void vrr(void) {
 
 
 int main() {
-    
+    int choice = FCFS;
+    printf("Choose the CPU scheduling policy to simulate: ");
+    printf("[0: FCFS, 1: SJF, 2: RR, 3: VRR]: ");
+    scanf("%d", &choice);
+    while(choice < 0 || choice > 3) {
+        printf("[0: FCFS, 1: SJF, 2: RR, 3: VRR]: ");
+        scanf("%d", &choice);
+    }
     initscr();
-    printw("HELLOOOOO");
-//    fcfs();
-//    sjf();
-//    rr();
-    vrr();
-    getch();
+    switch (choice) {
+        case FCFS:
+            fcfs();
+            break;
+        case SJF:
+            sjf();
+            break;
+        case RR:
+            rr();
+            break;
+        case VRR:
+            vrr();
+            break;
+        default:
+            break;
+    }
     endwin();
 }
