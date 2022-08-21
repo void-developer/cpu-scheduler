@@ -10,8 +10,9 @@
 
 #include <stdio.h>
 #include "process.h"
-#include "datastructs/heaps.h"
-#include "datastructs/queues.h"
+#include "heaps.h"
+#include "queues.h"
+#include <curses.h>
 #define PROCESS_NUM 10
 #define FALSE 0
 #define TRUE 1
@@ -25,4 +26,5 @@ void printQueue(queue *queue);
 void print_status(queue *io_q, queue *c_q, process *c_p, process *io_p);
 void print_status_heap(queue *io_q, heap *c_q, process *c_p, process *io_p);
 void arr_process_creation(process process_array[PROCESS_NUM]);
+void print_status_vrr(queue *io_q, queue *c_q, queue *cc_q, process *c_p, process *io_p);
 #endif /* mainhelper_h */

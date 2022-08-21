@@ -20,6 +20,7 @@ typedef struct Process {
     int next_op; //0 for CPU and 1 for I/O
     int waiting_time;
     int turnaround_time;
+    int rr_credit;
     int time_quantum;
 } process;
 process null_process(void);

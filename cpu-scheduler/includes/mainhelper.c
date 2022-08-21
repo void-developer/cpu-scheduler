@@ -14,10 +14,10 @@
 #include <string.h>
 #include <curses.h>
 #include "process.h"
-#include "datastructs/queues.h"
-#include "utility/debugger.h"
-#include "datastructs/heaps.h"
-#include "utility/parrays.h"
+#include "queues.h"
+#include "debugger.h"
+#include "heaps.h"
+#include "parrays.h"
 
 void reset_x_lines(int x) {
     printw("\33[2K");
@@ -104,21 +104,32 @@ void arr_process_creation(process process_array[PROCESS_NUM]) {
 }
 
 void print_process(process *process) {
-    printw("%2d      %4d     %8ld       %10d       %9d\n", process->pid, process->priority, process->arrival_time,
-           process->cpu_burst_time, process->io_burst_time);
+    printw("%2d      %4d     %8ld       %10d       %9d       %13d\n", process->pid, process->priority, process->arrival_time,
+           process->cpu_burst_time, process->io_burst_time, process->time_quantum);
+}
+
+void print_credit_process(process *process) {
+    printw("%2d      %4d     %8ld       %10d       %9d       %11d       %11d       %11d\n", process->pid, process->priority, process->arrival_time,
+           process->cpu_burst_time, process->io_burst_time, process->cpu_curr_burst_time, process->time_quantum, process->rr_credit);
+}
+
+void print_active_credit_process(process *process) {
+    printw("%2d      %4d     %8ld       %10d       %9d      %11d      %11d      %11d       %11d", process->pid, process->priority,
+           process->arrival_time, process->cpu_burst_time, process->io_burst_time, process->cpu_curr_burst_time,
+           process->io_curr_burst_time, process->time_quantum, process->rr_credit);
 }
 
 void print_active_process(process *process) {
-    printw("%2d      %4d     %8ld       %10d       %9d      %13d      %13d", process->pid, process->priority,
+    printw("%2d      %4d     %8ld       %10d       %9d      %11d      %9d      %9d", process->pid, process->priority,
            process->arrival_time, process->cpu_burst_time, process->io_burst_time, process->cpu_curr_burst_time,
-           process->io_curr_burst_time);
+           process->io_curr_burst_time, process->time_quantum);
 }
 
 
 void printQueue(queue *queue) {
 
-    printw("pid    priority    arrival_time    cpu_burst_time    io_burst_time\n");
-    printw("==================================================================\n");
+    printw("pid    priority    arrival_time    cpu_burst_time    io_burst_time    time_quantum\n");
+    printw("====================================================================================\n");
 
     if (!is_empty(queue)) {
         node *tempNode = queue->head;
@@ -128,15 +139,30 @@ void printQueue(queue *queue) {
         }
     }
 
-    printw("===================================================================\n");
+    printw("====================================================================================\n");
 }
 
+void print_credit_queue(queue *queue) {
+
+    printw("pid    priority    arrival_time    cpu_burst_time    io_burst_time    cpu_curr_time    time_quantum    credit\n");
+    printw("=================================================================================================================\n");
+
+    if (!is_empty(queue)) {
+        node *tempNode = queue->head;
+        while (tempNode != NULL) {
+            print_credit_process(tempNode->process);
+            tempNode = tempNode->next;
+        }
+    }
+
+    printw("=================================================================================================================\n");
+}
 
 void print_status(queue *io_q, queue *c_q, process *c_p, process *io_p) {
     clear();
     printw("### CURRENTLY ACTIVE PROCESSES ###\n");
-    printw("type   pid    priority    arrival_time    cpu_burst_time    io_burst_time    cpu_curr_burst_time    io_curr_burst_time\n");
-    printw("================================================================================================================\n");
+    printw("type   pid    priority    arrival_time    cpu_burst_time    io_burst_time    cpu_curr_time    io_curr_time    time_quantum\n");
+    printw("==============================================================================================================================\n");
     printw("CPU -> ");
     if (c_p != NULL) {
         print_active_process(c_p);
@@ -147,7 +173,7 @@ void print_status(queue *io_q, queue *c_q, process *c_p, process *io_p) {
         print_active_process(io_p);
     }
     printw("\n");
-    printw("================================================================================================================\n\n");
+    printw("==============================================================================================================================\n\n");
     printw("### CPU PROCESS QUEUE ###\n");
     printQueue(c_q);
     printw("\n### I/O QUEUE ###\n");
@@ -155,11 +181,36 @@ void print_status(queue *io_q, queue *c_q, process *c_p, process *io_p) {
     refresh();
 }
 
+void print_status_vrr(queue *io_q, queue *c_q, queue *cc_q, process *c_p, process *io_p) {
+    clear();
+    printw("### CURRENTLY ACTIVE PROCESSES ###\n");
+    printw("type   pid    priority    arrival_time    cpu_burst_time    io_burst_time    cpu_curr_time    io_curr_time    time_quantum    credit\n");
+    printw("===============================================================================================================================================\n");
+    printw("CPU -> ");
+    if (c_p != NULL) {
+        print_active_credit_process(c_p);
+    }
+    printw("\n");
+    printw("I/O -> ");
+    if (io_p != NULL) {
+        print_active_credit_process(io_p);
+    }
+    printw("\n");
+    printw("===============================================================================================================================================\n\n");
+    printw("### CPU PROCESS QUEUE ###\n");
+    print_credit_queue(c_q);
+    printw("\n### I/O QUEUE ###\n");
+    print_credit_queue(io_q);
+    printw("\n### CREDIT QUEUE ###\n");
+    print_credit_queue(cc_q);
+    refresh();
+}
+
 void print_heap(heap *h) {
     printw("pid    priority    arrival_time    cpu_burst_time    io_burst_time\n");
     printw("==================================================================\n");
     for (int i=0; i<h->size; i++) {
-        print_process(&h->data[i]);
+        print_process(h->data[i]);
     }
     printw("===================================================================\n");
 }
@@ -167,7 +218,7 @@ void print_heap(heap *h) {
 void print_status_heap(queue *io_q, heap *cpu_h, process *c_p, process *io_p) {
     clear();
     printw("### CURRENTLY ACTIVE PROCESSES ###\n");
-    printw("type   pid    priority    arrival_time    cpu_burst_time    io_burst_time    cpu_curr_burst_time    io_curr_burst_time\n");
+    printw("type   pid    priority    arrival_time    cpu_burst_time    io_burst_time    cpu_curr_time    io_curr_time\n");
     printw("================================================================================================================\n");
     printw("CPU -> ");
     if (c_p != NULL) {

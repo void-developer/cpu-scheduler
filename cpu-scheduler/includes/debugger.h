@@ -10,5 +10,5 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-bool ensure_debugger_attached_woraround(int timeout_ms);
+bool ensure_debugger_attached_workaround(int timeout_ms);
 #endif /* debugger_h */

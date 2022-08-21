@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <stdbool.h>
 
-bool ensure_debugger_attached_woraround(int timeout_ms) {
+bool ensure_debugger_attached_workaround(int timeout_ms) {
     fd_set fd_stdin;
     FD_ZERO(&fd_stdin);
     FD_SET(STDIN_FILENO, &fd_stdin);

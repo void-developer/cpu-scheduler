@@ -9,7 +9,7 @@
 #define queues_h
 
 #include <stdio.h>
-#include "../process.h"
+#include "process.h"
 typedef struct Node {
     process *process;
     struct Node *next;
