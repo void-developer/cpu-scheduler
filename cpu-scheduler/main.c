@@ -243,7 +243,7 @@ void vrr(void) {
 
 
 int main() {
-    int choice = FCFS;
+    int choice = -1;
     printf("Choose the CPU scheduling policy to simulate: ");
     printf("[0: FCFS, 1: SJF, 2: RR, 3: VRR]: ");
     scanf("%d", &choice);
